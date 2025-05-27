@@ -1,80 +1,54 @@
-import { Form, Input, Button, Row, Col, notification } from "antd";
-import { useNavigate } from "react-router";
-
-const URL = "https://demo2.z-bit.ee";
+import { Form, Input, Button, notification } from "antd";
+import { useNavigate } from "react-router-dom";
+import { login, getToken } from "../../api";
+import { useEffect } from "react";
 
 export default function Login() {
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (getToken()) navigate("/");
+  }, [navigate]);
+
   const onFinish = async (values) => {
     try {
-      const response = await fetch(`${URL}/users/get-token`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: values.username,
-          password: values.password,
-        }),
-      });
-
-      if (!response.ok) {
-        notification.error({ message: "Wrong username or password" });
-        return;
-      }
-
-      const data = await response.json();
+      await login(values.username, values.password);
       notification.success({ message: "Logged in" });
-
-      
-      localStorage.setItem("access_token", data.access_token);
-
       navigate("/");
-    } catch (error) {
-      notification.error({ message: "Login failed. Please try again." });
-      console.error("Login error:", error);
+    } catch {
+      notification.error({ message: "Wrong username or password" });
     }
   };
 
   return (
-    <Row
-      justify="center"
-      align="middle"
-      style={{ minHeight: "100vh" }}
-    >
-      <Col span={6}>
-        <h1>Login</h1>
-        <Form
-          name="basic"
-          layout="vertical"
-          initialValues={{ username: "", password: "" }}
-          onFinish={onFinish}
+    <div style={{ maxWidth: 400, margin: "auto", marginTop: "10vh" }}>
+      <h1>Login</h1>
+      <Form layout="vertical" onFinish={onFinish}>
+        <Form.Item
+          label="Username"
+          name="username"
+          rules={[{ required: true, message: "Please input your username!" }]}
         >
-          <Form.Item
-            label="Username"
-            name="username"
-            rules={[{ required: true, message: "Please input your username!" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Password"
-            name="password"
-            rules={[{ required: true, message: "Please input your password!" }]}
-          >
-            <Input.Password />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block>
-              Login
-            </Button>
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" onClick={() => navigate("/register")} block>
-              Register
-            </Button>
-          </Form.Item>
-        </Form>
-      </Col>
-    </Row>
+          <Input />
+        </Form.Item>
+        <Form.Item
+          label="Password"
+          name="password"
+          rules={[{ required: true, message: "Please input your password!" }]}
+        >
+          <Input.Password />
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" block>
+            Login
+          </Button>
+        </Form.Item>
+        <Form.Item>
+          <Button type="link" onClick={() => navigate("/register")} block>
+            Register
+          </Button>
+        </Form.Item>
+      </Form>
+    </div>
   );
 }
